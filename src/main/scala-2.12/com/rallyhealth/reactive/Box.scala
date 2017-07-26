@@ -51,6 +51,15 @@ case class BoxOfBoxes(
   override val lastShipped: Option[DateTime],
   boxes: Set[Box]) extends Box
 
+case class BoxInABox(
+  override val _id: String,
+  override val length: Int,
+  override val width: Int,
+  override val height: Int,
+  override val manufactureDate: DateTime,
+  override val lastShipped: Option[DateTime],
+  box: Box) extends Box
+
 object Box {
 
   implicit object BSONDateTimeHandler extends BSONHandler[BSONDateTime, DateTime] {
@@ -66,6 +75,7 @@ object Box {
   implicit val corrugatedBoxHandler = Macros.handler[CorrugatedBox]
   implicit val rigidBoxHandler = Macros.handler[RigidBox]
   implicit val foldingBoxHandler = Macros.handler[FoldingBox]
+  implicit val BoxInABoxHandler = Macros.handler[BoxInABox]
   implicit val boxOfBoxes = Macros.handler[BoxOfBoxes]
 
 }

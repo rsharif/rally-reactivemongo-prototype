@@ -18,6 +18,7 @@ class ReactiveBoxPersistenceSpec extends FunSuite {
     val rBoxId = BSONObjectID.generate().stringify
     val fBoxId = BSONObjectID.generate().stringify
     val bBoxId = BSONObjectID.generate().stringify
+    val bInABoxId = BSONObjectID.generate().stringify
 
     val now = DateTime.now
 
@@ -25,6 +26,7 @@ class ReactiveBoxPersistenceSpec extends FunSuite {
     val rBox = RigidBox(rBoxId, length = 4, width = 2, height = 2, manufactureDate =  now, lastShipped = Some(now), numberOfPiece = 5)
     val fBox = FoldingBox(fBoxId, length = 2, width = 1, height = 1, manufactureDate =  now, lastShipped = Some(now), style = "b")
     val boxOfBoxes = BoxOfBoxes(bBoxId, length = 3, width = 1, height = 1, manufactureDate =  now, lastShipped = None, boxes = Set(cBox, rBox, fBox))
+    val boxInABox = BoxInABox(bInABoxId, length = 5, width = 1, height = 1, manufactureDate =  now, lastShipped = None, box = cBox)
 
     val persister = new ReactiveBoxPersistence()
 
@@ -39,7 +41,8 @@ class ReactiveBoxPersistenceSpec extends FunSuite {
           persister.save(cBox),
           persister.save(rBox),
           persister.save(fBox),
-          persister.save(boxOfBoxes))), atMost)
+          persister.save(boxOfBoxes),
+          persister.save(boxInABox))), atMost)
 
     //find corrugatedBox
     val box = Await.result[Option[CorrugatedBox]](persister.findOneCorrugatedBox(), atMost)
@@ -52,12 +55,14 @@ class ReactiveBoxPersistenceSpec extends FunSuite {
     assert(boxes(1).length == 2)
     assert(boxes(2).length == 3)
     assert(boxes(3).length == 4)
+    assert(boxes(4).length == 5)
     //verify nullable value , box(2) has lastShipped None
     assert(boxes(2).lastShipped.isEmpty)
     assert(boxes(3).lastShipped == Some(now))
 
     val totalLength = Await.result(persister.findAggregateLength(), atMost)
-    assert(totalLength == 10)
+    assert(totalLength == 15)
+
 
     val deletionResultAfter = Await.result(persister.deleteAll(), atMost)
     assert(deletionResultAfter.ok)
